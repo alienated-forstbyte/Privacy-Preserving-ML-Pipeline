@@ -2,16 +2,16 @@ name: ML Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-
   train-model:
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: Checkout repo
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Setup Python
@@ -22,42 +22,13 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
-
-    - name: Install DVC
-      run: |
         pip install dvc
+
+    # IMPORTANT STEP
+    - name: Pull dataset from DVC
+      run: |
+        dvc pull
 
     - name: Run training pipeline
       run: |
         dvc repro
-
-    - name: Upload model artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: trained-model
-        path: models/
-
-  build-docker:
-
-    needs: train-model
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: Checkout repo
-      uses: actions/checkout@v4
-
-    - name: Build Docker image
-      run: |
-        docker build -t privacy-ml-api .
-
-  deploy:
-
-    needs: build-docker
-    runs-on: ubuntu-latest
-
-    steps:
-
-    - name: Deploy stack
-      run: |
-        docker compose up -d
