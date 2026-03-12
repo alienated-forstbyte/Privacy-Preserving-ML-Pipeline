@@ -5,6 +5,9 @@ from sklearn.model_selection import train_test_split
 import json
 import os
 
+import mlflow
+import mlflow.tensorflow
+
 from privacy_metrics import compute_epsilon
 
 
@@ -25,17 +28,16 @@ data = data.drop(columns=[
 
 
 # -----------------------------
-# One-hot encode categorical features
+# Encode categorical features
 # -----------------------------
 data = pd.get_dummies(data)
 
 
 # -----------------------------
-# Define target variable
+# Define target
 # -----------------------------
 target = "Test Results_Abnormal"
 
-# Remove all label columns from inputs
 X = data.drop(columns=[
     "Test Results_Abnormal",
     "Test Results_Inconclusive",
@@ -55,49 +57,13 @@ feature_columns = list(X.columns)
 with open("models/feature_columns.json", "w") as f:
     json.dump(feature_columns, f)
 
-# ------------------------
-#  Adding MLflow
-# ------------------------
-
-import mlflow
-import mlflow.tensorflow
-
-mlflow.set_experiment("privacy_ml_training")
-
-with mlflow.start_run():
-
-    mlflow.log_param("epochs", 10)
-    mlflow.log_param("batch_size", 32)
-    mlflow.log_param("noise_multiplier", 1.1)
-
-    # Build model
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(X_train.shape[1],)),
-        tf.keras.layers.Dense(64, activation="relu"),
-        tf.keras.layers.Dense(32, activation="relu"),
-        tf.keras.layers.Dense(1, activation="sigmoid")
-    ])
-
-    history = model.fit(
-        X_train,
-        y_train,
-        epochs=10,
-        batch_size=32,
-        validation_data=(X_test, y_test)
-    )
-
-    accuracy = history.history["val_accuracy"][-1]
-    mlflow.log_metric("validation_accuracy", accuracy)
-    mlflow.log_metric("epsilon", epsilon)
-
-    mlflow.tensorflow.log_model(model, "model")
-
 
 # -----------------------------
 # Train / test split
 # -----------------------------
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
+    X,
+    y,
     test_size=0.2,
     random_state=42
 )
@@ -114,7 +80,7 @@ y_test = tf.convert_to_tensor(y_test.values, dtype=tf.float32)
 
 
 # -----------------------------
-# Differential Privacy Optimizer
+# Differential Privacy optimizer
 # -----------------------------
 optimizer = tensorflow_privacy.DPKerasAdamOptimizer(
     l2_norm_clip=1.0,
@@ -128,7 +94,8 @@ optimizer = tensorflow_privacy.DPKerasAdamOptimizer(
 # Build model
 # -----------------------------
 model = tf.keras.Sequential([
-    tf.keras.layers.Dense(64, activation="relu", input_shape=(X_train.shape[1],)),
+    tf.keras.layers.Input(shape=(X_train.shape[1],)),
+    tf.keras.layers.Dense(64, activation="relu"),
     tf.keras.layers.Dense(32, activation="relu"),
     tf.keras.layers.Dense(1, activation="sigmoid")
 ])
@@ -142,34 +109,51 @@ model.compile(
 
 
 # -----------------------------
-# Train model
+# MLflow experiment tracking
 # -----------------------------
-model.fit(
-    X_train,
-    y_train,
-    epochs=10,
-    batch_size=32,
-    validation_data=(X_test, y_test)
-)
+mlflow.set_experiment("privacy_ml_training")
+
+with mlflow.start_run():
+
+    mlflow.log_param("epochs", 10)
+    mlflow.log_param("batch_size", 32)
+    mlflow.log_param("noise_multiplier", 1.1)
+
+    # Train model
+    history = model.fit(
+        X_train,
+        y_train,
+        epochs=10,
+        batch_size=32,
+        validation_data=(X_test, y_test)
+    )
+
+    val_accuracy = history.history["val_accuracy"][-1]
+    mlflow.log_metric("validation_accuracy", val_accuracy)
+
+
+    # -----------------------------
+    # Compute privacy budget
+    # -----------------------------
+    dataset_size = len(X_train)
+
+    epsilon = compute_epsilon(
+        dataset_size=dataset_size,
+        batch_size=32,
+        noise_multiplier=1.1,
+        epochs=10
+    )
+
+    mlflow.log_metric("epsilon", epsilon)
+
+    print(f"Privacy Budget (ε): {epsilon}")
+
+    # Log model to MLflow
+    mlflow.tensorflow.log_model(model, "model")
 
 
 # -----------------------------
-# Compute privacy budget
-# -----------------------------
-dataset_size = len(X_train)
-
-epsilon = compute_epsilon(
-    dataset_size=dataset_size,
-    batch_size=32,
-    noise_multiplier=1.1,
-    epochs=10
-)
-
-print(f"Privacy Budget (ε): {epsilon}")
-
-
-# -----------------------------
-# Save trained model
+# Save trained model locally
 # -----------------------------
 model.save("models/private_model.keras")
 
