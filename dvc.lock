@@ -1,0 +1,18 @@
+schema: '2.0'
+stages:
+  train:
+    cmd: python src/train_dp_model.py
+    deps:
+    - path: data/healthcare.csv
+      hash: md5
+      md5: fb481618ffd78b2cd3eb937948f7b7e9
+      size: 8399221
+    - path: src/train_dp_model.py
+      hash: md5
+      md5: b5b8639656aced9a2b6b406afa518e81
+      size: 2988
+    outs:
+    - path: models/private_model.keras
+      hash: md5
+      md5: 34d877fa2f8eb97c9a887d515796ee5c
+      size: 35889
