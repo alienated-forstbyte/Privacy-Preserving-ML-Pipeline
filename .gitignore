@@ -20,21 +20,6 @@ venv/
 # ==============================
 .ipynb_checkpoints
 
-# ==============================
-# Data files
-# ==============================
-data/
-*.csv
-*.parquet
-*.feather
-
-# ==============================
-# Model artifacts
-# ==============================
-models/*.keras
-models/*.h5
-models/*.pkl
-models/*.joblib
 
 # ==============================
 # Logs
