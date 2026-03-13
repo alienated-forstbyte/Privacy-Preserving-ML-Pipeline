@@ -9,7 +9,7 @@ This project demonstrates how to combine **Differential Privacy**, **experiment 
 ```
 ## Architecture
 
-
+```
 Dataset
 │
 ▼
@@ -38,7 +38,7 @@ Docker Deployment
 │
 ▼
 GitHub Actions CI/CD
-
+```
 ```
 
 ---
@@ -89,7 +89,7 @@ GitHub Actions pipeline automatically:
 ## Project Structure
 
 ```
-
+```
 Privacy-Preserving-ML-Pipeline
 │
 ├── data/                    # Dataset
@@ -111,8 +111,8 @@ Privacy-Preserving-ML-Pipeline
 ├── requirements.txt
 ├── dvc.yaml
 └── README.md
-
 ```
+````
 
 ---
 
