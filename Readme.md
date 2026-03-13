@@ -267,18 +267,6 @@ Tracked metrics include:
 
 ---
 
-## Why Differential Privacy?
-
-Differential Privacy ensures the model **does not memorize individual training records**.
-
-This is critical for sensitive domains:
-
-* Healthcare
-* Finance
-* Government data
-
----
-
 ## Future Improvements
 
 Potential extensions:
