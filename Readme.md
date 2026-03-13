@@ -6,10 +6,9 @@ A production-style **machine learning pipeline that trains privacy-preserving mo
 This project demonstrates how to combine **Differential Privacy**, **experiment tracking**, **reproducible pipelines**, **model serving**, and **observability** in a modern MLOps stack.
 
 ---
-
+```
 ## Architecture
 
-```
 
 Dataset
 │
@@ -113,7 +112,7 @@ Privacy-Preserving-ML-Pipeline
 ├── dvc.yaml
 └── README.md
 
-````
+```
 
 ---
 
@@ -121,11 +120,11 @@ Privacy-Preserving-ML-Pipeline
 
 Run the reproducible training pipeline:
 
-```bash
+bash
 dvc repro
 ````
 
-Outputs:
+Outputs:    
 
 ```
 models/private_model.keras
@@ -295,6 +294,3 @@ Potential extensions:
 ## License
 
 MIT License
-
-```
-```
